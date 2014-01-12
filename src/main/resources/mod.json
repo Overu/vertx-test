@@ -23,16 +23,19 @@
 
   // Python verticle
   //"main": "ping_verticle.py",
+  
+  "deploys": "io.vertx~mod-redis~1.1.4-SNAPSHOT",
+  "includes": "com.englishtown~vertx-mod-guice~1.3.0-final",
 
 
   // If your module is going to be registered in the Vert.x module registry you will also need the following
   // mandatory fields
-  "description":"Put description of your module here",
+  "description":"just a vert.x api test",
   "licenses": ["The Apache Software License Version 2.0"],
-  "author": "Joe Bloggs",
+  "author": "Overu",
 
   // Optional fields
-  "developers": ["Other Dev 1", "Other Dev 2"],
-  "keywords": ["gerbils", "cars", "cheese", "chocolate", "underpants", "herring"],
-  "homepage": "url to your project page"
+  "developers": ["Overu"],
+  "keywords": ["test", "event bus"],
+  "homepage": "no page"
 }
