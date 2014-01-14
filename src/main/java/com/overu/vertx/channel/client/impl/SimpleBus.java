@@ -8,9 +8,9 @@ import com.overu.vertx.channel.client.util.JsonUtil;
 import com.overu.vertx.channel.core.Handler;
 import com.overu.vertx.channel.core.Platform;
 import com.overu.vertx.channel.core.VoidHandler;
-
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import com.overu.vertx.json.Json;
+import com.overu.vertx.json.JsonArray;
+import com.overu.vertx.json.JsonObject;
 
 public class SimpleBus implements Bus {
 
@@ -25,12 +25,12 @@ public class SimpleBus implements Bus {
   }
 
   public SimpleBus(JsonObject options) {
-    handlerMap = new JsonObject();
-    repalyHandlers = new JsonObject();
+    handlerMap = Json.createObject();
+    repalyHandlers = Json.createObject();
     idGenerator = new IdGenerator();
     state = State.OPEN;
 
-    forkLocal = options != null && JsonUtil.isContainer(options, "forkLocal") ? options.getBoolean("forkLocal") : false;
+    forkLocal = options != null && options.has("forkLocal") ? options.getBoolean("forkLocal") : false;
 
   }
 
@@ -74,20 +74,20 @@ public class SimpleBus implements Bus {
   }
 
   protected void clearHandlers() {
-    JsonUtil.clear(handlerMap);
-    JsonUtil.clear(repalyHandlers);
+    handlerMap.clear();
+    repalyHandlers.clear();
   }
 
   protected void deliverMessage(String address, Message message) {
     JsonArray handlers = handlerMap.getArray(address);
     if (handlers != null) {
-      for (int i = 0, len = handlers.size(); i < len; i++) {
+      for (int i = 0, len = handlers.length(); i < len; i++) {
         scheduleHandle(message, handlers.get(i));
       }
     } else {
       JsonObject handler = repalyHandlers.getObject(address);
       if (handler != null) {
-        repalyHandlers.removeField(address);
+        repalyHandlers.remove(address);
         scheduleHandle(message, handler);
       }
     }

@@ -1,8 +1,6 @@
 package com.overu.vertx.channel.client.util;
 
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.json.impl.Json;
 
 public class JsonUtil {
 
