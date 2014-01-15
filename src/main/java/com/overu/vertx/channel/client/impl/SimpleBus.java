@@ -4,8 +4,8 @@ import com.overu.vertx.channel.client.Bus;
 import com.overu.vertx.channel.client.Message;
 import com.overu.vertx.channel.client.State;
 import com.overu.vertx.channel.client.util.IdGenerator;
-import com.overu.vertx.channel.client.util.JsonUtil;
 import com.overu.vertx.channel.core.Handler;
+import com.overu.vertx.channel.core.HandlerRegistration;
 import com.overu.vertx.channel.core.Platform;
 import com.overu.vertx.channel.core.VoidHandler;
 import com.overu.vertx.json.Json;
@@ -53,17 +53,12 @@ public class SimpleBus implements Bus {
   }
 
   @Override
-  public Bus registerHandler(String address, Handler<? extends Message> handler) {
+  public HandlerRegistration registerHandler(String address, Handler<? extends Message> handler) {
     return null;
   }
 
   @Override
   public <T> Bus send(String address, Object message, Handler<Message<T>> replyHandler) {
-    return null;
-  }
-
-  @Override
-  public Bus unRegisterHandler(String address, Handler<? extends Message> handler) {
     return null;
   }
 
@@ -85,7 +80,7 @@ public class SimpleBus implements Bus {
         scheduleHandle(message, handlers.get(i));
       }
     } else {
-      JsonObject handler = repalyHandlers.getObject(address);
+      Object handler = repalyHandlers.get(address);
       if (handler != null) {
         repalyHandlers.remove(address);
         scheduleHandle(message, handler);
@@ -99,10 +94,10 @@ public class SimpleBus implements Bus {
   }
 
   protected void scheduleHandle(final Object message, final Object handler) {
-    Platform.scheduleDefferrd(new VoidHandler() {
+    Platform.scheduleDefferrd(new Handler<Void>() {
 
       @Override
-      protected void handle() {
+      public void handle(Void ignore) {
         nativeHandle(message, handler);
       }
 

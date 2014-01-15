@@ -6,9 +6,9 @@ public interface PlatformFactory {
 
   Net net();
 
-  void scheduleDefferrd(VoidHandler handler);
+  void scheduleDefferrd(Handler<Void> handler);
 
-  int setPeriodic(int delayMs, VoidHandler handler);
+  int setPeriodic(int delayMs, Handler<Void> handler);
 
   Platform.Type type();
 

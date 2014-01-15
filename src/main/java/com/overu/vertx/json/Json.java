@@ -1,8 +1,10 @@
 package com.overu.vertx.json;
 
+import com.overu.vertx.json.impl.JreJsonFactory;
+
 public class Json {
 
-  private static JsonFactory FACTORY;
+  private static JsonFactory FACTORY = new JreJsonFactory();
 
   public static JsonArray createArray() {
     return FACTORY.createArray();

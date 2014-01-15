@@ -1,6 +1,7 @@
 package com.overu.vertx.channel.client;
 
 import com.overu.vertx.channel.core.Handler;
+import com.overu.vertx.channel.core.HandlerRegistration;
 
 public interface Bus {
 
@@ -16,11 +17,8 @@ public interface Bus {
   Bus publish(String address, Object message);
 
   @SuppressWarnings("rawtypes")
-  Bus registerHandler(String address, Handler<? extends Message> handler);
+  HandlerRegistration registerHandler(String address, Handler<? extends Message> handler);
 
   <T> Bus send(String address, Object message, Handler<Message<T>> replyHandler);
-
-  @SuppressWarnings("rawtypes")
-  Bus unRegisterHandler(String address, Handler<? extends Message> handler);
 
 }

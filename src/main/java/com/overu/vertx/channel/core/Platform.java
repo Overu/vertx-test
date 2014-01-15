@@ -21,7 +21,7 @@ public class Platform {
     return get().net();
   }
 
-  public static void scheduleDefferrd(VoidHandler handler) {
+  public static void scheduleDefferrd(Handler<Void> handler) {
     get().scheduleDefferrd(handler);
   }
 
@@ -29,7 +29,7 @@ public class Platform {
     FACTORY = factory;
   }
 
-  public static int setPeriodic(int delayMs, VoidHandler handler) {
+  public static int setPeriodic(int delayMs, Handler<Void> handler) {
     return get().setPeriodic(delayMs, handler);
   }
 
