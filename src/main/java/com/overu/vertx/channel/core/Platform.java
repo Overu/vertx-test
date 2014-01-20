@@ -17,6 +17,10 @@ public class Platform {
     return FACTORY;
   }
 
+  public static void handle(Object handler, Object event) {
+    get().handle(handler, event);
+  }
+
   public static Net net() {
     return get().net();
   }

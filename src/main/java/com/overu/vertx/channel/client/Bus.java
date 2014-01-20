@@ -6,9 +6,9 @@ import com.overu.vertx.channel.core.HandlerRegistration;
 public interface Bus {
 
   String LOCAL = "@";
-  String LOCAL_ON_OPEN = "local.onOpen";
-  String LOCAL_ON_CLOSE = "local.onClose";
-  String LOCAL_ON_ERROR = "local.onError";
+  String LOCAL_ON_OPEN = LOCAL + "local.onOpen";
+  String LOCAL_ON_CLOSE = LOCAL + "local.onClose";
+  String LOCAL_ON_ERROR = LOCAL + "local.onError";
 
   void close();
 

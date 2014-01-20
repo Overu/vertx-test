@@ -57,7 +57,7 @@ public class DefaultMessage<T> implements Message<T> {
 
   private <M> void sendReply(Object message, Handler<Message<M>> replyHandler) {
     if (bus != null && replyAddress != null) {
-      bus.send(address, message, replyHandler);
+      bus.send(replyAddress, message, replyHandler);
     }
   }
 

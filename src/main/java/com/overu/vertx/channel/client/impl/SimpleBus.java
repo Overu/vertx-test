@@ -12,12 +12,21 @@ import com.overu.vertx.json.Json;
 import com.overu.vertx.json.JsonArray;
 import com.overu.vertx.json.JsonObject;
 
+import org.vertx.java.platform.impl.HAManager;
+
 public class SimpleBus implements Bus {
+
+  protected static void checkNotNull(String paramName, Object param) {
+    if (param == null) {
+      throw new IllegalArgumentException("Parameter " + paramName + " must be specified");
+    }
+  }
 
   protected final JsonObject handlerMap;
   protected final JsonObject repalyHandlers;
   private final IdGenerator idGenerator;
   private final boolean forkLocal;
+
   private State state = State.CONNECTION;
 
   public SimpleBus() {
@@ -49,23 +58,27 @@ public class SimpleBus implements Bus {
 
   @Override
   public Bus publish(String address, Object message) {
-    return null;
+    sendOrPub(false, address, message, null);
+    return this;
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
-  public HandlerRegistration registerHandler(String address, Handler<? extends Message> handler) {
-    return null;
+  public HandlerRegistration registerHandler(final String address, final Handler<? extends Message> handler) {
+    doRegisterHandler(address, handler);
+    return new HandlerRegistration() {
+
+      @Override
+      public void unRegisterHandler() {
+        doUnregisterHandler(address, handler);
+      }
+    };
   }
 
   @Override
   public <T> Bus send(String address, Object message, Handler<Message<T>> replyHandler) {
+    sendOrPub(true, address, message, replyHandler);
     return null;
-  }
-
-  protected void checkNotNull(String paramName, Object param) {
-    if (param == null) {
-      throw new IllegalArgumentException("Parameter " + paramName + " must be specified");
-    }
   }
 
   protected void clearHandlers() {
@@ -73,34 +86,87 @@ public class SimpleBus implements Bus {
     repalyHandlers.clear();
   }
 
-  protected void deliverMessage(String address, Message message) {
+  protected void deliverMessage(String address, Message<?> message) {
     JsonArray handlers = handlerMap.getArray(address);
     if (handlers != null) {
       for (int i = 0, len = handlers.length(); i < len; i++) {
-        scheduleHandle(message, handlers.get(i));
+        scheduleHandle(handlers.get(i), message);
       }
     } else {
       Object handler = repalyHandlers.get(address);
       if (handler != null) {
         repalyHandlers.remove(address);
-        scheduleHandle(message, handler);
+        scheduleHandle(handler, message);
       }
     }
   }
 
-  @SuppressWarnings("unchecked")
-  protected <T> void nativeHandle(T message, Object handler) {
-    ((Handler<T>) handler).handle(message);
+  @SuppressWarnings("rawtypes")
+  protected boolean doRegisterHandler(String address, Handler<? extends Message> handler) {
+    checkNotNull("address", address);
+    checkNotNull("handler", handler);
+    JsonArray handlers = handlerMap.getArray(address);
+    if (handlers == null) {
+      handlerMap.set(address, Json.createArray().push(handler));
+      return true;
+    } else if (handlers.indexOf(handler) == -1) {
+      handlers.push(handler);
+    }
+    return false;
   }
 
-  protected void scheduleHandle(final Object message, final Object handler) {
+  @SuppressWarnings("rawtypes")
+  protected boolean doUnregisterHandler(String address, Handler<? extends Message> handler) {
+    assert address != null : "address shouldn't be null";
+    assert handler != null : "handler shouldn't be null";
+    JsonArray handlers = handlerMap.getArray(address);
+    if (handlers != null) {
+      int idx = handlers.indexOf(handler);
+      if (idx != -1) {
+        handlers.remove(idx);
+      }
+      if (handlers.length() == 0) {
+        handlerMap.remove(address);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  protected boolean isLocalFork(String address) {
+    assert address != null : "address shouldn't be null";
+    return forkLocal && address.startsWith(LOCAL);
+  }
+
+  protected String makeUUID() {
+    return idGenerator.next(36);
+  }
+
+  protected void scheduleHandle(final Object handler, final Object message) {
     Platform.scheduleDefferrd(new Handler<Void>() {
 
       @Override
       public void handle(Void ignore) {
-        nativeHandle(message, handler);
+        Platform.handle(handler, message);
       }
 
     });
+  }
+
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  protected <T> void sendOrPub(boolean send, String address, Object message, Handler<Message<T>> replyHandler) {
+    checkNotNull("address", address);
+    String replyAddress = null;
+    if (replyHandler != null) {
+      replyAddress = makeUUID();
+      repalyHandlers.set(replyAddress, replyHandler);
+    }
+    if (isLocalFork(address)) {
+      address = address.substring(LOCAL.length());
+      if (replyAddress != null) {
+        replyAddress = LOCAL + replyAddress;
+      }
+    }
+    deliverMessage(address, new DefaultMessage(send, this, address, replyAddress, message));
   }
 }
