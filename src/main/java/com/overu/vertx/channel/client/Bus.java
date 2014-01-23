@@ -21,4 +21,6 @@ public interface Bus {
 
   <T> Bus send(String address, Object message, Handler<Message<T>> replyHandler);
 
+  Bus setHook(BusHook hook);
+
 }

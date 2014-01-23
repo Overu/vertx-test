@@ -8,7 +8,7 @@ public class JavaNet implements Net {
 
   @Override
   public WebSocket createWebSocket(String url, JsonObject options) {
-    return null;
+    return new JavaWebSocket(url);
   }
 
 }
