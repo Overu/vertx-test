@@ -8,18 +8,14 @@ import com.overu.vertx.channel.client.util.IdGenerator;
 import com.overu.vertx.channel.core.Handler;
 import com.overu.vertx.channel.core.HandlerRegistration;
 import com.overu.vertx.channel.core.Platform;
-import com.overu.vertx.channel.core.VoidHandler;
 import com.overu.vertx.json.Json;
 import com.overu.vertx.json.JsonArray;
 import com.overu.vertx.json.JsonObject;
-
-import org.vertx.java.platform.impl.HAManager;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SimpleBus implements Bus {
-
+  public final static String MODE_MIX = "forkLocal";
   private final static Logger log = Logger.getLogger(SimpleBus.class.getName());
 
   protected static void checkNotNull(String paramName, Object param) {
@@ -28,11 +24,11 @@ public class SimpleBus implements Bus {
     }
   }
 
+  private final JsonObject options;
   protected final JsonObject handlerMap;
   protected final JsonObject repalyHandlers;
   private final IdGenerator idGenerator;
   private final boolean forkLocal;
-
   private State state = State.CONNECTION;
   private BusHook hook;
 
@@ -41,21 +37,25 @@ public class SimpleBus implements Bus {
   }
 
   public SimpleBus(JsonObject options) {
+    this.options = options;
     handlerMap = Json.createObject();
     repalyHandlers = Json.createObject();
     idGenerator = new IdGenerator();
     state = State.OPEN;
 
-    forkLocal = options != null && options.has("forkLocal") ? options.getBoolean("forkLocal") : false;
+    forkLocal = options != null && options.has(MODE_MIX) ? options.getBoolean(MODE_MIX) : false;
 
   }
 
   @Override
   public void close() {
-    state = State.CLOSING;
-    doDeliverMessage(new DefaultMessage<Void>(false, null, LOCAL_ON_CLOSE, null, null));
-    state = State.CLOSED;
-    clearHandlers();
+    if (hook == null || hook.handlePreClose()) {
+      doClose();
+    }
+  }
+
+  public JsonObject getOptions() {
+    return options == null ? null : options.copy();
   }
 
   @Override
@@ -95,6 +95,9 @@ public class SimpleBus implements Bus {
   @Override
   public SimpleBus setHook(BusHook hook) {
     this.hook = hook;
+    if (hook != null && state == State.OPEN) {
+      hook.handleOpened();
+    }
     return this;
   }
 
@@ -103,7 +106,17 @@ public class SimpleBus implements Bus {
     repalyHandlers.clear();
   }
 
-  protected void doDeliverMessage(Message<?> message) {
+  protected void doClose() {
+    state = State.CLOSING;
+    doReceiveMessage(new DefaultMessage<Void>(false, null, LOCAL_ON_CLOSE, null, null));
+    state = State.CLOSED;
+    clearHandlers();
+    if (hook != null) {
+      hook.handlePostClose();
+    }
+  }
+
+  protected void doReceiveMessage(Message<?> message) {
     String address = message.address();
     JsonArray handlers = handlerMap.getArray(address);
     if (handlers != null) {
@@ -144,7 +157,7 @@ public class SimpleBus implements Bus {
     DefaultMessage msg =
         new DefaultMessage(send, this, isLocal ? address.substring(LOCAL.length()) : address, isLocal && replyHandler != null
             ? (LOCAL + replyAddress) : replyAddress, message);
-    if (internalHandleDeliverMessage(msg) && replyHandler != null) {
+    if (internalHandleReceiveMessage(msg) && replyHandler != null) {
       repalyHandlers.set(replyAddress, replyHandler);
     }
   }
@@ -168,9 +181,9 @@ public class SimpleBus implements Bus {
   }
 
   @SuppressWarnings("rawtypes")
-  protected boolean internalHandleDeliverMessage(Message message) {
+  protected boolean internalHandleReceiveMessage(Message message) {
     if (hook == null || hook.handleReceivMessage(message)) {
-      doDeliverMessage(message);
+      doReceiveMessage(message);
       return true;
     }
     return false;
@@ -186,15 +199,15 @@ public class SimpleBus implements Bus {
   }
 
   protected void scheduleHandle(final String address, final Object handler, final Object message) {
-    Platform.scheduleDefferrd(new Handler<Void>() {
+    Platform.schedule().scheduleDeferred(new Handler<Void>() {
 
       @Override
       public void handle(Void ignore) {
         try {
-          Platform.handle(handler, message);
+          Platform.schedule().handle(handler, message);
         } catch (Exception e) {
           log.log(Level.WARNING, "Failed to handle on address: " + address, e);
-          doDeliverMessage(new DefaultMessage<JsonObject>(false, null, LOCAL_ON_ERROR, null, Json.createObject().set("address", address)
+          doReceiveMessage(new DefaultMessage<JsonObject>(false, null, LOCAL_ON_ERROR, null, Json.createObject().set("address", address)
               .set("cause", e).set("event", message)));
         }
       }

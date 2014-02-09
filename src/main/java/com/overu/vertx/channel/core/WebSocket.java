@@ -16,22 +16,6 @@ public interface WebSocket {
 
   }
 
-  WebSocket EMPTY = new WebSocket() {
-
-    @Override
-    public void close() {
-    }
-
-    @Override
-    public void send(String data) {
-    }
-
-    @Override
-    public void setListen(WebSocketHandler handler) {
-    }
-
-  };
-
   void close();
 
   void send(String data);

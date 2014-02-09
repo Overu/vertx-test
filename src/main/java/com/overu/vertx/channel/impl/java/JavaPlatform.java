@@ -5,6 +5,7 @@ import com.overu.vertx.channel.core.Net;
 import com.overu.vertx.channel.core.Platform;
 import com.overu.vertx.channel.core.Platform.Type;
 import com.overu.vertx.channel.core.PlatformFactory;
+import com.overu.vertx.channel.core.Scheduler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,62 +19,26 @@ public class JavaPlatform implements PlatformFactory {
     Platform.setFactory(new JavaPlatform());
   }
 
-  private final AtomicInteger timerId;
-  private final Map<Integer, TimerTask> timers;
-  private final Timer timer;
   protected JavaNet net;
+  protected JavaScheduler scheduler;
 
   protected JavaPlatform() {
-    timerId = new AtomicInteger(1);
-    timers = new HashMap<Integer, TimerTask>();
-    timer = new Timer(true);
+    this(new JavaScheduler());
   }
 
-  @Override
-  public boolean cancelTimer(int id) {
-    if (timers.containsKey(id)) {
-      timers.get(id).cancel();
-      timers.remove(id);
-      return true;
-    }
-    return false;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public void handle(Object handler, Object event) {
-    ((Handler<Object>) handler).handle(event);
+  protected JavaPlatform(JavaScheduler scheduler) {
+    net = new JavaNet();
+    this.scheduler = scheduler;
   }
 
   @Override
   public Net net() {
-    return net == null ? new JavaNet() : net;
+    return net;
   }
 
   @Override
-  public void scheduleDefferrd(final Handler<Void> handler) {
-    new Thread(new Runnable() {
-
-      @Override
-      public void run() {
-        handler.handle(null);
-      }
-    }).start();
-  }
-
-  @Override
-  public int setPeriodic(int delayMs, final Handler<Void> handler) {
-    final int id = timerId.getAndIncrement();
-    TimerTask task = new TimerTask() {
-
-      @Override
-      public void run() {
-        handler.handle(null);
-      }
-    };
-    timers.put(id, task);
-    timer.scheduleAtFixedRate(task, delayMs, delayMs);
-    return id;
+  public Scheduler schedule() {
+    return this.scheduler;
   }
 
   @Override
