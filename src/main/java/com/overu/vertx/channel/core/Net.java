@@ -1,6 +1,6 @@
 package com.overu.vertx.channel.core;
 
-import org.vertx.java.core.json.JsonObject;
+import com.overu.vertx.json.JsonObject;
 
 public interface Net {
 

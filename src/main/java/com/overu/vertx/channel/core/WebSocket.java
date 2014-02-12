@@ -1,6 +1,6 @@
 package com.overu.vertx.channel.core;
 
-import org.vertx.java.core.json.JsonObject;
+import com.overu.vertx.json.JsonObject;
 
 public interface WebSocket {
 
@@ -15,22 +15,6 @@ public interface WebSocket {
     void onOpen();
 
   }
-
-  WebSocket EMPTY = new WebSocket() {
-
-    @Override
-    public void close() {
-    }
-
-    @Override
-    public void send(String data) {
-    }
-
-    @Override
-    public void setListen(WebSocketHandler handler) {
-    }
-
-  };
 
   void close();
 

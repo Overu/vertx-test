@@ -1,7 +1,8 @@
 package com.overu.vertx.channel.client;
 
 public class ReplyException extends RuntimeException {
-
+  @SuppressWarnings("unused")
+  private final static Long serialVersionUID = -4441153344646081242L;
   private final ReplyFailure failureType;
   private final int failureCode;
 
