@@ -1,17 +1,10 @@
 package com.overu.vertx.channel.impl.java;
 
-import com.overu.vertx.channel.core.Handler;
 import com.overu.vertx.channel.core.Net;
 import com.overu.vertx.channel.core.Platform;
 import com.overu.vertx.channel.core.Platform.Type;
 import com.overu.vertx.channel.core.PlatformFactory;
 import com.overu.vertx.channel.core.Scheduler;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class JavaPlatform implements PlatformFactory {
 

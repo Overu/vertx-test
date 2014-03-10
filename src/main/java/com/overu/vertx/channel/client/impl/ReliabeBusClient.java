@@ -13,10 +13,10 @@ import com.overu.vertx.json.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class RebiabeBusClient implements Bus {
+public class ReliabeBusClient implements Bus {
   public final static String SEQUENCE_NUMBER = "_seq";
   public final static String ACKNOWLEDGE_DELAY_MILLIS = "acknowledgeDelayMillis";
-  private final static Logger log = Logger.getLogger(RebiabeBusClient.class.getName());
+  private final static Logger log = Logger.getLogger(ReliabeBusClient.class.getName());
 
   private final int acknowledgeDelayMillis;
   private final JsonObject pendings;
@@ -27,7 +27,7 @@ public class RebiabeBusClient implements Bus {
   private final SimpleBus delegate;
   private BusHook hook;
 
-  public RebiabeBusClient(SimpleBus delegate) {
+  public ReliabeBusClient(SimpleBus delegate) {
     this.delegate = delegate;
     JsonObject options = delegate.getOptions();
     acknowledgeDelayMillis =
@@ -105,7 +105,7 @@ public class RebiabeBusClient implements Bus {
   }
 
   @Override
-  public RebiabeBusClient setHook(BusHook hook) {
+  public ReliabeBusClient setHook(BusHook hook) {
     this.hook = hook;
     return this;
   }

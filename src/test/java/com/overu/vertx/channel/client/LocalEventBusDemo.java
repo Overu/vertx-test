@@ -22,6 +22,7 @@ public class LocalEventBusDemo {
   }
 
   private static HandlerRegistration handlerRegistration;
+  private static HandlerRegistration handlerRegistration1;
 
   static {
     JavaPlatform.register();
@@ -44,6 +45,20 @@ public class LocalEventBusDemo {
 
         handlerRegistration.unRegisterHandler();
         handlerRegistration = null;
+      }
+    });
+
+    handlerRegistration1 = bus.registerHandler("someaddress", new MessageHandler<Any>() {
+
+      @Override
+      public void handle(Message<Any> event) {
+        Assert.assertEquals("some string", event.body().str);
+        Assert.assertSame(demo, event.body().demo);
+
+        event.reply("reply");
+
+        handlerRegistration1.unRegisterHandler();
+        handlerRegistration1 = null;
       }
     });
 
